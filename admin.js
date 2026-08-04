@@ -92,24 +92,106 @@ const DataStore = {
     },
 
     _listenToCollection(collectionName, cacheKey, updateUI) {
-        if (!this.firestore) return;
+        // --- Fallback to localStorage if Firestore is not available ---
+        if (!this.firestore) {
+            console.log(`DataStore: Firestore not found. Loading '${cacheKey}' from localStorage.`);
+            try {
+                const localData = JSON.parse(localStorage.getItem(`sc69_${cacheKey}`));
+                if (Array.isArray(localData)) {
+                    this.cache[cacheKey] = localData;
+                } else {
+                    // Pre-populate with user's requested data if local storage is empty
+                    if (cacheKey === 'events') {
+                        const fallbackEvents = [
+                            { "id": "evt001", "eventDate": "2026-07-27", "time": "ตลอดวัน", "title": "โพสต์ นโยบายอวาที", "place": "Online" },
+                            { "id": "evt002", "eventDate": "2026-07-28", "time": "ตลอดวัน", "title": "วันเฉลิมพระชนมพรรษา รัชกาลที่ 10", "place": "N/A" },
+                            { "id": "evt003", "eventDate": "2026-07-29", "time": "ตลอดวัน", "title": "วันอาสาฬหบูชา", "place": "N/A" },
+                            { "id": "evt004", "eventDate": "2026-07-30", "time": "ตลอดวัน", "title": "วันเข้าพรรษา", "place": "N/A" },
+                            { "id": "evt005", "eventDate": "2026-08-01", "time": "ตลอดวัน", "title": "โพสต์ นโยบาย public", "place": "Online" },
+                            { "id": "evt006", "eventDate": "2026-08-03", "time": "ตลอดวัน", "title": "โพสต์ นโยบายร่ม", "place": "Online" },
+                            { "id": "evt007", "eventDate": "2026-08-05", "time": "ตลอดวัน", "title": "โพสต์ นโย love to read", "place": "Online" },
+                            { "id": "evt008", "eventDate": "2026-08-10", "time": "ตลอดวัน", "title": "โพสต์ นโยบายตู้บริจาค", "place": "Online" },
+                            { "id": "evt009", "eventDate": "2026-08-12", "time": "ตลอดวัน", "title": "โพสต์ นโยเกียรติบัตร", "place": "Online" },
+                            { "id": "evt010", "eventDate": "2026-08-15", "time": "ตลอดวัน", "title": "โพสต์ นโยบายแจ้งซ่อม", "place": "Online" },
+                            { "id": "evt011", "eventDate": "2026-08-18", "time": "ตลอดวัน", "title": "โพสต์ นโยบายสบู่", "place": "Online" },
+                            { "id": "evt012", "eventDate": "2026-08-30", "time": "ตลอดวัน", "title": "สตร. ปิดรับสมัครสบู่", "place": "Online" },
+                            { "id": "evt013", "eventDate": "2026-09-01", "time": "ตลอดวัน", "title": "โพสต์นโยบาย จัดทำข้อสอบ", "place": "Online" },
+                            { "id": "evt014", "eventDate": "2026-09-03", "time": "ตลอดวัน", "title": "โพสต์ นโยบายผ้าอนามัย", "place": "Online" },
+                            { "id": "evt015", "eventDate": "2026-09-23", "time": "ตลอดวัน", "title": "โพสต์นโยบาย e-sport", "place": "Online" },
+                            { "id": "evt016", "eventDate": "2026-10-02", "time": "ตลอดวัน", "title": "สตร. ปิดรับสมัคร esport", "place": "Online" },
+                            { "id": "evt017", "eventDate": "2026-10-22", "time": "ตลอดวัน", "title": "โพสต์ นโยบาย my cover", "place": "Online" },
+                            { "id": "evt018", "eventDate": "2026-10-26", "time": "ตลอดวัน", "title": "สตร. ปิดรับ my cover", "place": "Online" },
+                            { "id": "evt019", "eventDate": "2026-11-13", "time": "ตลอดวัน", "title": "ลงสตร. ประกาศผล my cover", "place": "Online" },
+                            { "id": "evt020", "eventDate": "2026-11-16", "time": "ตลอดวัน", "title": "โพสต์ นโยบายช้อนส้อม", "place": "Online" },
+                            { "id": "evt021", "eventDate": "2026-11-17", "time": "ตลอดวัน", "title": "โพสต์ vdoการใช้รอด.", "place": "Online" },
+                            { "id": "evt022", "eventDate": "2026-11-20", "time": "ตลอดวัน", "title": "โพสต์ นโยบายวอลเล่", "place": "Online" },
+                            { "id": "evt023", "eventDate": "2026-11-29", "time": "ตลอดวัน", "title": "สตร ปิดรับวอลเล่", "place": "Online" },
+                            { "id": "evt024", "eventDate": "2026-12-03", "time": "ตลอดวัน", "title": "โพสต์ นโยบายนาฬิกา", "place": "Online" },
+                            { "id": "evt025", "eventDate": "2026-12-05", "time": "ตลอดวัน", "title": "วันพ่อแห่งชาติ (วันเฉลิมพระชนมพรรษา รัชกาลที่ 9)", "place": "N/A" },
+                            { "id": "evt026", "eventDate": "2026-12-31", "time": "ตลอดวัน", "title": "วันสิ้นปี", "place": "N/A" },
+                            { "id": "evt027", "eventDate": "2027-01-05", "time": "ตลอดวัน", "title": "โพสต์นโยบาย open house", "place": "Online" }
+                        ];
+                        this.cache.events = fallbackEvents;
+                        this._syncCacheToLocal('events');
+                    }
+                }
+            } catch (e) {
+                console.error(`DataStore: Failed to load '${cacheKey}' from localStorage`, e);
+            }
+            // Still call updateUI to render from cache (either loaded or empty)
+            if (typeof updateUI === 'function') updateUI(this.cache[cacheKey]);
+            return;
+        }
+        // --- Original Firestore logic ---
         const { collection, query, orderBy, onSnapshot } = window.firebase;
-        
         const q = query(collection(this.firestore, collectionName), orderBy('createdAt', 'desc'));
-
         onSnapshot(q, (snapshot) => {
             const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             this.cache[cacheKey] = items;
+            // Also sync to localStorage for offline access
+            this._syncCacheToLocal(cacheKey); 
             if (typeof updateUI === 'function') updateUI(items);
         }, (err) => {
             console.error(`DataStore: Firestore snapshot error on ${collectionName}`, err);
         });
     },
 
-    async _writeDocument(collectionName, item, isNew = false) {
-        if (!this.firestore || !item) return;
-        const { doc, setDoc, addDoc, collection, serverTimestamp } = window.firebase;
+    _syncCacheToLocal(cacheKey) {
+        if (this.cache[cacheKey]) {
+            try {
+                localStorage.setItem(`sc69_${cacheKey}`, JSON.stringify(this.cache[cacheKey]));
+                console.log(`DataStore: Synced '${cacheKey}' to localStorage.`);
+            } catch (e) {
+                console.error(`DataStore: Failed to sync '${cacheKey}' to localStorage`, e);
+            }
+        }
+    },
 
+    async _writeDocument(collectionName, item, isNew = false) {
+        // --- Fallback to localStorage if Firestore is not available ---
+        if (!this.firestore) {
+            console.log(`DataStore: Firestore not found. Writing '${collectionName}' to localStorage.`);
+            const cacheKey = collectionName; // In this app, collection name matches cache key
+            if (!this.cache[cacheKey]) this.cache[cacheKey] = [];
+
+            if (isNew) {
+                const newId = `${cacheKey.slice(0, 3)}_${new Date().getTime()}`;
+                const newItem = { ...item, id: newId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+                this.cache[cacheKey].unshift(newItem); // Add to start
+                this._syncCacheToLocal(cacheKey);
+                return Promise.resolve(newId);
+            } else {
+                const index = this.cache[cacheKey].findIndex(i => i.id === item.id);
+                if (index > -1) {
+                    this.cache[cacheKey][index] = { ...this.cache[cacheKey][index], ...item, updatedAt: new Date().toISOString() };
+                    this._syncCacheToLocal(cacheKey);
+                }
+                return Promise.resolve(item.id);
+            }
+        }
+
+        // --- Original Firestore logic ---
+        const { doc, setDoc, addDoc, collection, serverTimestamp } = window.firebase;
         try {
             if (isNew) {
                 const docRef = await addDoc(collection(this.firestore, collectionName), {
@@ -129,7 +211,19 @@ const DataStore = {
     },
 
     async _deleteDocument(collectionName, id) {
-        if (!this.firestore || id == null) return;
+        // --- Fallback to localStorage if Firestore is not available ---
+        if (!this.firestore) {
+            console.log(`DataStore: Firestore not found. Deleting from '${collectionName}' in localStorage.`);
+            const cacheKey = collectionName;
+            if (this.cache[cacheKey]) {
+                this.cache[cacheKey] = this.cache[cacheKey].filter(i => String(i.id) !== String(id));
+                this._syncCacheToLocal(cacheKey);
+            }
+            return Promise.resolve();
+        }
+
+        // --- Original Firestore logic ---
+        if (id == null) return;
         const { doc, deleteDoc } = window.firebase;
         try {
             await deleteDoc(doc(this.firestore, collectionName, String(id)));

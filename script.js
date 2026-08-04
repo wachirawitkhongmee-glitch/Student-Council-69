@@ -247,6 +247,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return this.db;
             } catch (error) {
                 console.error("Main script Firestore initialization failed:", error);
+                // Fallback to load from localStorage
+                console.log("Firestore init failed. Loading events from localStorage.");
+                try {
+                    const localEvents = JSON.parse(localStorage.getItem('sc69_events'));
+                    if (window.renderEvents && Array.isArray(localEvents)) {
+                        window.renderEvents(localEvents);
+                    }
+                } catch (e) {
+                    console.error("Failed to load events from localStorage", e);
+                }
                 return null;
             }
         },
@@ -913,6 +923,36 @@ function resetFilters() {
         if (nextBtn) {
             nextBtn.addEventListener('click', () => changeCalendarMonth(1));
         }
+
+        // Listen for changes from other tabs (i.e., the admin panel)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'sc69_events') {
+                console.log('Detected events change in localStorage. Re-rendering calendar.');
+                try {
+                    const updatedEvents = JSON.parse(e.newValue);
+                    if (window.renderEvents && Array.isArray(updatedEvents)) {
+                        // Sort events by date before rendering
+                        updatedEvents.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+                        window.renderEvents(updatedEvents);
+                    }
+                } catch (err) {
+                    console.error('Failed to parse updated events from localStorage', err);
+                }
+            }
+            // Also listen for news changes
+            if (e.key === 'sc69_news') {
+                console.log('Detected news change in localStorage. Re-rendering news.');
+                 try {
+                    const updatedNews = JSON.parse(e.newValue);
+                    if (window.renderNews && Array.isArray(updatedNews)) {
+                        updatedNews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        window.renderNews(updatedNews);
+                    }
+                } catch (err) {
+                    console.error('Failed to parse updated news from localStorage', err);
+                }
+            }
+        });
     });
 })();
 
